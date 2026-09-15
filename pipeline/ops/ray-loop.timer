@@ -1,0 +1,21 @@
+[Unit]
+Description=Fire the Ray Kessler posting cycle once a day
+Documentation=file:///opt/dani/ugc-pipeline/loop/cycle.py
+
+[Timer]
+# 14:05 UTC = 09:05 America/Chicago. Offset ~45 minutes from dani-loop.timer
+# (13:20 UTC) deliberately. The two cycles CAN now run concurrently — the flock is
+# per-persona and lives under each persona's own root — but they share one
+# Metricool account and one LLM gateway, and there is nothing to gain from having
+# them contend. Staggering also keeps the two cycle logs readable.
+#
+# Same reasoning as Dani's for the hour: late enough that yesterday's metrics have
+# matured for pull_and_score, and clear of Ray's posting slots (17:15, 20:05,
+# 22:15 local) so a cycle never races a publish.
+OnCalendar=*-*-* 14:05:00 UTC
+
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

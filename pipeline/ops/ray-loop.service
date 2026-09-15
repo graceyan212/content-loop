@@ -1,0 +1,45 @@
+[Unit]
+Description=Ray Kessler autonomous posting cycle (one shot)
+Documentation=file:///opt/dani/ugc-pipeline/loop/cycle.py
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=dani
+Group=dani
+WorkingDirectory=/opt/dani/ugc-pipeline
+
+# Same env file as the Dani unit, on purpose. It carries the Metricool TOKEN and
+# USER_ID, which are account-wide and shared. The BRAND is not read from here:
+# cycle.py takes it from ray/persona.json via personas.require_blog_id(), which
+# REFUSES to run rather than fall back to whatever METRICOOL_BLOG_ID the env file
+# happens to hold. That refusal is what keeps Ray off Dani's brand.
+EnvironmentFile=/etc/dani/dani.env
+
+# --persona is mandatory. Without it cycle.py exits non-zero rather than falling
+# back to the default persona, which is Dani.
+ExecStart=/usr/local/bin/python3 loop/cycle.py --persona ray
+TimeoutStartSec=2700
+Nice=10
+Restart=no
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# /opt/dani covers ugc-pipeline and every persona data root beside it, including
+# ray/. The run lock now lives at <root>/learn/loop.lock rather than /tmp because
+# PrivateTmp gives this unit its own /tmp, so a /tmp lock is invisible to anyone
+# running the cycle by hand — see loop/guard.py lock_file().
+ReadWritePaths=/opt/dani /var/log/dani
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+StandardOutput=append:/var/log/dani/ray-cycle.log
+StandardError=append:/var/log/dani/ray-cycle.log
+
+[Install]
+WantedBy=multi-user.target

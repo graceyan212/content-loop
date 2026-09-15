@@ -1,0 +1,47 @@
+[Unit]
+Description=Dani autonomous posting cycle (one shot)
+Documentation=file:///opt/dani/ugc-pipeline/loop/cycle.py
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=dani
+Group=dani
+WorkingDirectory=/opt/dani/ugc-pipeline
+
+# Secrets live in a root-owned file the dani user can read, never in the unit and
+# never in user-data (user-data is readable from instance metadata forever).
+EnvironmentFile=/etc/dani/dani.env
+
+# The cycle is resumable: re-running the same run id skips posts already scheduled.
+# So a timeout kill is safe — the next fire picks up where this one stopped.
+# /usr/bin/python3 is 3.9 on AL2023 and is left alone so dnf keeps working.
+# The pipeline needs 3.11+ (uses `X | None` syntax), which lives here.
+# --persona is REQUIRED by cycle.py as of the three-persona split. It used to be
+# omitted and default to "dani"; that default is exactly how a second persona's
+# timer would post to the wrong brand, so the flag is now mandatory and explicit.
+ExecStart=/usr/local/bin/python3 loop/cycle.py --persona dani
+TimeoutStartSec=2700
+Nice=10
+
+# Never let a failing cycle hammer the API or burn budget in a tight retry loop.
+# One attempt per timer fire; the timer is the retry.
+Restart=no
+
+# Hardening. The cycle needs outbound network, its own tree, and nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/dani /var/log/dani
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+StandardOutput=append:/var/log/dani/cycle.log
+StandardError=append:/var/log/dani/cycle.log
+
+[Install]
+WantedBy=multi-user.target

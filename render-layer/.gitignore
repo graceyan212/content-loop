@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.superpowers/
+channels/*/out/
+channels/*/voice/cache/
+channels/*/footage/*.mp4
+channels/*/footage/*.mov
+channels/*/footage/manifest.json
+.env.local
+*.key

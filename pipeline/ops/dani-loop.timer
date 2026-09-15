@@ -1,0 +1,22 @@
+[Unit]
+Description=Fire the Dani posting cycle once a day
+Documentation=file:///opt/dani/ugc-pipeline/loop/cycle.py
+
+[Timer]
+# 13:20 UTC = 08:20 America/Chicago. Two reasons for the hour:
+#   - Metricool's analytics sync runs up to ~24h behind a post, so yesterday's
+#     numbers have matured by now and pull_and_score sees real data.
+#   - it is well clear of the posting slots themselves (06:15, 12:10, 17:15,
+#     22:15 local), so a cycle never races a publish.
+# Not on the hour: everything schedules on :00 and it clusters API load.
+OnCalendar=*-*-* 13:20:00 UTC
+
+# If the box was asleep or rebooting at 13:20, run as soon as it is back rather
+# than silently skipping a day.
+Persistent=true
+
+# Spread the actual start over 10 minutes.
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

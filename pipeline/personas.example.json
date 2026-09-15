@@ -1,0 +1,13 @@
+{
+  "persona-a": {
+    "root": "../personas/persona-a",
+    "blog_id": "1000001",
+    "timezone": "America/Chicago",
+    "posts_per_day": 4
+  },
+  "persona-b": {
+    "root": "../personas/persona-b",
+    "blog_id": null,
+    "timezone": null
+  }
+}
